@@ -1,13 +1,7 @@
+from flask import Flask, render_template
 import os, random, pyodbc
 
-from flask import Flask, jsonify
-
 app = Flask(__name__)
-
-quotes = [
-    {"id": 1, "quote": "Quote 1", "author": "Author 1"},
-    {"id": 2, "quote": "Quote 2", "author": "Author 2"}
-]
 
 server = 'quote-webapp-db-srv.database.windows.net'
 database = 'quotes'
@@ -22,10 +16,6 @@ def get_db_connection():
 
 @app.route('/')
 def index():
-    return "Welcome to the Random Quote API!"
-
-@app.route('/quote')
-def get_quote():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT COUNT(*) FROM quotes')
@@ -35,13 +25,11 @@ def get_quote():
         cursor.execute('SELECT id, quote, author FROM quotes WHERE id = ?', (random_id,))
         quote_data = cursor.fetchone()
         if quote_data:
-            return jsonify({"id": quote_data[0], "quote": quote_data[1], "author": quote_data[2]})
+            return render_template('quote.html', quote=quote_data[1], author=quote_data[2])
         else:
-            return jsonify({"error": "Quote not found"}), 404
+            return "Quote not found", 404
     else:
-        return jsonify({"error": "No quotes found"}), 404
-
+        return "No quotes found", 404
 
 if __name__ == '__main__':
-   app.run()
-   
+    app.run()
